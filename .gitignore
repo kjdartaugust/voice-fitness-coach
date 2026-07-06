@@ -32,4 +32,3 @@ Thumbs.db
 .idea/
 
 backend/runtwi.db
-.github/workflows/ci.yml
