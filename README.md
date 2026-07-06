@@ -69,12 +69,54 @@ cd frontend && npm install && npm run dev
 
 ## Deploy
 
-- **Frontend** → Vercel: `cd frontend && vercel --prod` (set `NEXT_PUBLIC_API_URL`).
-- **Backend** → any container host (Render/Fly/Railway/Cloud Run): `docker build backend/`.
-- **DB/Auth/Storage** → Supabase project; run `backend/supabase/migrations/*` via the Supabase SQL editor or `supabase db push`.
+The whole stack runs on **free tiers**: Neon (Postgres), Render (FastAPI), Vercel (Next.js).
 
-See [`docs/deploy.md`](docs/deploy.md) for the full walkthrough and
-[`docs/voice-recording-guide.md`](docs/voice-recording-guide.md) to record a new dialect.
+### Live URLs
+
+| Layer | URL |
+|---|---|
+| Frontend (Vercel) | _pending first deploy_ |
+| Backend (Render) | _pending first deploy_ |
+| Database (Neon)   | _pending — host `ep-xxxx-pooler.<region>.aws.neon.tech`_ |
+
+> These are filled in once the three services are live. `NEXT_PUBLIC_API_URL` (frontend)
+> must equal the backend URL, and `CORS_ORIGINS` (backend) must include the frontend URL.
+
+### First-time deploy (reproducible from this repo + `.env.example`)
+
+**1 — Database (Neon, free):** create a project at [neon.tech](https://neon.tech) → copy the
+**pooled** connection string (`...-pooler...`, `?sslmode=require`). The backend auto-translates
+libpq params for asyncpg, so paste it verbatim as `DATABASE_URL`.
+
+**2 — Backend (Render, free):** New → **Blueprint** → connect this GitHub repo. Render reads
+[`render.yaml`](render.yaml) and provisions `runtwi-api` (Docker, Frankfurt). Set the `sync: false`
+env vars in the dashboard:
+- `DATABASE_URL` = the Neon pooled string from step 1
+- `CORS_ORIGINS` = your Vercel URL (from step 3; a Render env change restarts the service, no rebuild)
+- `SUPABASE_JWT_SECRET`, `PHRASEBANK_BASE_URL` = optional
+
+The app creates its tables on boot (`init_models`) and survives a cold DB. Verify: `GET /health`.
+
+**3 — Frontend (Vercel, free):**
+```bash
+cd frontend
+vercel link                                          # once, to create the project
+vercel env add NEXT_PUBLIC_API_URL production        # paste the Render backend URL
+vercel --prod                                        # build bakes the API URL in
+```
+Then set `CORS_ORIGINS` on Render to the resulting Vercel URL.
+
+### How to redeploy
+
+- **Frontend:** `cd frontend && vercel --prod` (or push to `main` if Git integration is on).
+  Changed an env var? `vercel env rm NEXT_PUBLIC_API_URL production` then re-add, then redeploy —
+  `NEXT_PUBLIC_*` values are baked at build time.
+- **Backend:** push to `main` (Render auto-deploys the Blueprint) or hit **Manual Deploy** in Render.
+  Env-var-only changes just restart the service.
+- **Database:** schema changes ship via `backend/supabase/migrations/*.sql`; the ORM auto-creates
+  tables on boot for dev/first-run.
+
+See [`docs/voice-recording-guide.md`](docs/voice-recording-guide.md) to record a new dialect.
 
 ## Tests
 
