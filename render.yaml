@@ -1,0 +1,25 @@
+# Render Blueprint — deploys the FastAPI backend on the free tier.
+# In the Render dashboard: New → Blueprint → connect this repo. Render reads this file.
+# You still create the Neon database yourself and paste DATABASE_URL below (or in the
+# dashboard env editor). Free tier: the service sleeps after ~15 min idle (cold start
+# on next request). Keep-alive is intentionally NOT configured here.
+services:
+  - type: web
+    name: runtwi-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    region: frankfurt        # closest free region to Ghana
+    healthCheckPath: /health
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false          # paste your Neon pooled connection string in the dashboard
+      - key: SUPABASE_JWT_SECRET
+        sync: false          # optional: only if you enable Supabase auth on the client
+      - key: CORS_ORIGINS
+        sync: false          # set to your Vercel URL, e.g. https://runtwi.vercel.app
+      - key: PHRASEBANK_BASE_URL
+        sync: false          # optional; defaults to the backend's own /static/phrasebank

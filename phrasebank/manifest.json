@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "note": "Text is a best-effort transcription for the voice actor and for on-screen captions. It MUST be reviewed and re-recorded by a native speaker before production. See docs/voice-recording-guide.md.",
+  "dialects": ["twi", "ga", "ewe"],
+  "audio_ext": "webm",
+  "phrases": {
+    "speed_up":     { "twi": "Yɛ ntɛm kakra",        "ga": "Fee oya",            "ewe": "Ɖe abla",          "segments": ["speed_up"] },
+    "slow_down":    { "twi": "Brɛ wo ho ase",        "ga": "Ba shi blɛoo",       "ewe": "Ɖe blewuu",        "segments": ["slow_down"] },
+    "on_pace":      { "twi": "Wo so bɔ yie",         "ga": "Oyɛ jogbaŋŋ",        "ewe": "Èle edzi nyuie",   "segments": ["on_pace"] },
+    "cadence_low":  { "twi": "Bɔ wo nan ntɛm",       "ga": "Kã onaji anɔkɔ",     "ewe": " Zɔ kaba wu",      "segments": ["cadence_low"] },
+    "overstriding": { "twi": "Yɛ wo anammɔn tia",    "ga": "Fee onaji bibioo",   "ewe": "Wɔ afɔɖeɖe kpui",  "segments": ["overstriding"] },
+    "halfway":      { "twi": "Woaduru mfimfini",     "ga": "Oshɛ teŋgbɛ",        "ewe": "Èɖo titina",       "segments": ["halfway"] },
+    "finish":       { "twi": "Woawie! Mo ne wo",    "ga": "Ogbe naa! Ayekoo",   "ewe": "Èwu enu! Ayikoo",  "segments": ["finish"] },
+    "encourage":    { "twi": "Kɔ so! Wobɛtumi",      "ga": "Ya nɔ! Obaanya",     "ewe": "Yi edzi! Àte ŋu", "segments": ["encourage"] },
+    "interval_work":{ "twi": "Fi ase — tu mmirika",  "ga": "Bɔ shishii — jo foi", "ewe": "Dze egɔme — ƒu du","segments": ["interval_work"] },
+    "interval_rest":{ "twi": "Home kakra",           "ga": "Hejɔɔ fioo",         "ewe": "Ɖe gbɔ vie",       "segments": ["interval_rest"] },
+
+    "km_split":     { "twi": "kilomita",             "ga": "kilomita",           "ewe": "kilomita",         "segments": ["_num", "unit_km", "split_done"], "parametric": "km" },
+    "distance_remaining": { "twi": "aka",            "ga": "eshwɛ",              "ewe": "susɔ",             "segments": ["_num", "unit_m", "remaining"], "parametric": "meters" }
+  },
+
+  "units": {
+    "unit_m":       { "twi": "mita",        "ga": "mita",        "ewe": "mita" },
+    "unit_km":      { "twi": "kilomita",    "ga": "kilomita",    "ewe": "kilomita" },
+    "remaining":    { "twi": "aka",         "ga": "eshwɛ",       "ewe": "susɔ" },
+    "split_done":   { "twi": "awie",        "ga": "egbe",        "ewe": "wu enu" }
+  },
+
+  "numbers": {
+    "1":  { "twi": "baako",     "ga": "ekome",    "ewe": "ɖeka" },
+    "2":  { "twi": "mmienu",    "ga": "enyɔ",     "ewe": "eve" },
+    "3":  { "twi": "mmiɛnsa",   "ga": "etɛ",      "ewe": "etɔ̃" },
+    "4":  { "twi": "ɛnan",      "ga": "ejwɛ",     "ewe": "ene" },
+    "5":  { "twi": "enum",      "ga": "enumɔ",    "ewe": "atɔ̃" },
+    "6":  { "twi": "nsia",      "ga": "ekpaa",    "ewe": "ade" },
+    "7":  { "twi": "nson",      "ga": "kpawo",    "ewe": "adre" },
+    "8":  { "twi": "nwɔtwe",    "ga": "kpaanyɔ",  "ewe": "enyi" },
+    "9":  { "twi": "nkron",     "ga": "nɛɛhu",    "ewe": "asieke" },
+    "10": { "twi": "du",        "ga": "nyɔŋma",   "ewe": "ewo" },
+    "200":{ "twi": "ahanu",     "ga": "ohanyɔ",   "ewe": "alafaeve" },
+    "500":{ "twi": "ahanum",    "ga": "ohanumɔ",  "ewe": "alafaatɔ̃" },
+    "1000":{ "twi": "apem",     "ga": "akpe",     "ewe": "akpe" }
+  }
+}
