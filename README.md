@@ -75,12 +75,15 @@ The whole stack runs on **free tiers**: Neon (Postgres), Render (FastAPI), Verce
 
 | Layer | URL |
 |---|---|
-| Frontend (Vercel) | _pending first deploy_ |
-| Backend (Render) | _pending first deploy_ |
-| Database (Neon)   | _pending — host `ep-xxxx-pooler.<region>.aws.neon.tech`_ |
+| Frontend (Vercel) | **https://runtwi.vercel.app** |
+| Backend (Render) | **https://runtwi-api.onrender.com** ([`/docs`](https://runtwi-api.onrender.com/docs)) |
+| Database (Neon)   | host `ep-nameless-dust-asqr5qyq-pooler.c-4.eu-central-1.aws.neon.tech`, db `neondb` |
 
-> These are filled in once the three services are live. `NEXT_PUBLIC_API_URL` (frontend)
-> must equal the backend URL, and `CORS_ORIGINS` (backend) must include the frontend URL.
+> `NEXT_PUBLIC_API_URL` (frontend) must equal the backend URL, and `CORS_ORIGINS` (backend)
+> must include the frontend origin — exactly, with scheme and no trailing slash.
+>
+> The Render free instance spins down after ~15 min idle; the first request after that
+> takes ~30–50s to cold-start. Subsequent requests are normal speed.
 
 ### First-time deploy (reproducible from this repo + `.env.example`)
 
