@@ -17,19 +17,18 @@ export function useUnit(): [Unit, (u: Unit) => void] {
   return [unit, setUnit];
 }
 
-/** Small km | mi segmented toggle, reusable on any screen. */
+/** km | mi segmented toggle, reusable on any screen. */
 export function UnitToggle() {
   const [unit, set] = useUnit();
   return (
-    <div className="row" role="group" aria-label="Distance units">
+    <div className="seg" role="group" aria-label="Distance units">
       {(['km', 'mi'] as Unit[]).map((u) => (
         <button
           key={u}
           type="button"
-          className={`pill ${unit === u ? 'on' : ''}`}
+          className={`seg-btn ${unit === u ? 'on' : ''}`}
           aria-pressed={unit === u}
           onClick={() => set(u)}
-          style={{ flex: 1, cursor: 'pointer', border: 'none' }}
         >
           {u === 'km' ? 'Kilometres' : 'Miles'}
         </button>

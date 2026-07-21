@@ -3,19 +3,29 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useRun } from '../useRun';
 import { useUnit, UnitToggle } from '../useUnit';
-import { fmtTime, fmtDistUnit, fmtPaceUnit, DIALECT_LABELS } from '@/lib/format';
+import { fmtTime, fmtPace, fmtDistUnit, fmtPaceUnit, DIALECT_LABELS } from '@/lib/format';
 import {
   toUnit, toMetres, paceToUnit, paceToSPerKm,
-  unitLabel, unitLabelLong, paceLabel,
+  unitLabel, unitLabelLong, paceLabel, type Unit,
 } from '@/lib/units';
 import type { Dialect, RunMode } from '@/lib/types';
 
-const MODES: { id: RunMode; label: string }[] = [
-  { id: 'free', label: 'Free' },
-  { id: 'tempo', label: 'Tempo' },
-  { id: 'interval', label: 'Interval' },
-  { id: 'long', label: 'Long' },
+const MODES: { id: RunMode; label: string; blurb: string }[] = [
+  { id: 'free', label: 'Free', blurb: 'Just run — no targets' },
+  { id: 'tempo', label: 'Tempo', blurb: 'Hold a steady goal pace' },
+  { id: 'interval', label: 'Interval', blurb: 'Work / rest repeats' },
+  { id: 'long', label: 'Long', blurb: 'Easy distance day' },
 ];
+
+// Common race targets, defined in metres so the chips are exact in either unit.
+const RACES: { label: string; m: number }[] = [
+  { label: '5K', m: 5000 },
+  { label: '10K', m: 10000 },
+  { label: 'Half', m: 21097.5 },
+];
+
+const PACE_MIN = 120;  // 2:00
+const PACE_MAX = 1200; // 20:00
 
 export default function RunPage() {
   const router = useRouter();
@@ -23,36 +33,29 @@ export default function RunPage() {
   const [unit] = useUnit();
   const [dialect, setDialect] = useState<Dialect>('twi');
   const [mode, setMode] = useState<RunMode>('tempo');
-  const [targetPaceMin, setTargetPaceMin] = useState('5');
-  const [targetPaceSec, setTargetPaceSec] = useState('30');
-  const [targetDist, setTargetDist] = useState('5');
+  const [paceSec, setPaceSec] = useState(330);   // seconds per current unit (5:30)
+  const [targetDist, setTargetDist] = useState('5'); // in current unit
 
-  // When the user flips km <-> mi, convert what they've typed so the *target*
-  // stays physically the same (5 km becomes 3.11 mi, not a new 5 mi goal).
+  // Flip km <-> mi: convert what's typed so the physical target is unchanged.
   const prevUnit = useRef(unit);
   useEffect(() => {
     const from = prevUnit.current;
     if (from === unit) return;
     prevUnit.current = unit;
-
+    setPaceSec((s) => Math.round(paceToUnit(paceToSPerKm(s, from), unit)));
     const d = Number(targetDist);
     if (d > 0) setTargetDist(toUnit(toMetres(d, from), unit).toFixed(2));
+  }, [unit, targetDist]);
 
-    const secFrom = Number(targetPaceMin) * 60 + Number(targetPaceSec);
-    if (secFrom > 0) {
-      const secTo = paceToUnit(paceToSPerKm(secFrom, from), unit);
-      setTargetPaceMin(String(Math.floor(secTo / 60)));
-      setTargetPaceSec(String(Math.round(secTo % 60)).padStart(2, '0'));
-    }
-  }, [unit, targetDist, targetPaceMin, targetPaceSec]);
+  const distNum = Number(targetDist) || 0;
+  const otherUnit: Unit = unit === 'km' ? 'mi' : 'km';
+  const modeLabel = MODES.find((m) => m.id === mode)!.label;
 
   const onStart = () => {
-    const tpUnit = Number(targetPaceMin) * 60 + Number(targetPaceSec);
-    const d = Number(targetDist);
     start({
       mode, dialect,
-      targetPace: mode === 'free' ? null : paceToSPerKm(tpUnit, unit),
-      targetDistanceM: d > 0 ? toMetres(d, unit) : null,
+      targetPace: mode === 'free' ? null : paceToSPerKm(paceSec, unit),
+      targetDistanceM: distNum > 0 ? toMetres(distNum, unit) : null,
     });
   };
 
@@ -67,42 +70,96 @@ export default function RunPage() {
         <div className="brand"><span className="dot" /> New run</div>
 
         <div className="card">
-          <label className="l muted">Coaching language</label>
-          <select value={dialect} onChange={(e) => setDialect(e.target.value as Dialect)} style={{ marginTop: 8 }}>
+          {/* Language */}
+          <label className="field-label" htmlFor="lang">Coaching language</label>
+          <select id="lang" value={dialect} onChange={(e) => setDialect(e.target.value as Dialect)} style={{ marginTop: 8 }}>
             {Object.entries(DIALECT_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select>
 
-          <label className="l muted" style={{ display: 'block', marginTop: 16 }}>Units</label>
-          <div style={{ marginTop: 8 }}><UnitToggle /></div>
-
-          <label className="l muted" style={{ display: 'block', marginTop: 16 }}>Workout</label>
-          <div className="row" style={{ marginTop: 8, flexWrap: 'wrap' }}>
-            {MODES.map((m) => (
-              <button key={m.id}
-                className={`pill ${mode === m.id ? 'on' : ''}`}
-                onClick={() => setMode(m.id)}
-                style={{ flex: '1 0 40%', cursor: 'pointer', border: 'none' }}>
-                {m.label}
-              </button>
-            ))}
+          {/* Units */}
+          <div className="stack">
+            <span className="field-label">Units</span>
+            <p className="hint">Switch anytime — your targets convert automatically.</p>
+            <div style={{ marginTop: 8 }}><UnitToggle /></div>
           </div>
 
+          {/* Workout type */}
+          <div className="stack">
+            <span className="field-label">Workout</span>
+            <p className="hint">{MODES.find((m) => m.id === mode)!.blurb}.</p>
+            <div className="chip-row" style={{ marginTop: 8 }}>
+              {MODES.map((m) => (
+                <button key={m.id} type="button"
+                  className={`chip ${mode === m.id ? 'on' : ''}`}
+                  style={{ flex: '1 0 46%' }}
+                  aria-pressed={mode === m.id}
+                  onClick={() => setMode(m.id)}>
+                  {m.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Target pace — only when a pace goal makes sense */}
           {mode !== 'free' && (
-            <>
-              <label className="l muted" style={{ display: 'block', marginTop: 16 }}>Target pace (min{paceLabel(unit)})</label>
-              <div className="row" style={{ marginTop: 8 }}>
-                <input type="number" value={targetPaceMin} onChange={(e) => setTargetPaceMin(e.target.value)} />
-                <input type="number" value={targetPaceSec} onChange={(e) => setTargetPaceSec(e.target.value)} />
+            <div className="stack">
+              <label className="field-label">Target pace</label>
+              <p className="hint">How fast per {unitLabelLong(unit).toLowerCase().slice(0, -1)}. Tap − faster · + slower.</p>
+              <div className="stepper" style={{ marginTop: 8 }}>
+                <button type="button" className="step-btn" aria-label="Faster (subtract 5 seconds)"
+                  onClick={() => setPaceSec((s) => Math.max(PACE_MIN, s - 5))}>−</button>
+                <div className="step-val">
+                  <div className="n">{fmtPace(paceSec)}</div>
+                  <div className="u">min : sec {paceLabel(unit)}</div>
+                </div>
+                <button type="button" className="step-btn" aria-label="Slower (add 5 seconds)"
+                  onClick={() => setPaceSec((s) => Math.min(PACE_MAX, s + 5))}>+</button>
               </div>
-            </>
+            </div>
           )}
 
-          <label className="l muted" style={{ display: 'block', marginTop: 16 }}>Target distance ({unitLabel(unit)})</label>
-          <input type="number" value={targetDist} onChange={(e) => setTargetDist(e.target.value)} style={{ marginTop: 8 }} />
+          {/* Target distance — presets + free entry */}
+          <div className="stack">
+            <label className="field-label" htmlFor="dist">Target distance</label>
+            <p className="hint">Pick a race or type your own. Leave it open to just run.</p>
+            <div className="chip-row" style={{ marginTop: 8 }}>
+              {RACES.map((r) => {
+                const val = toUnit(r.m, unit);
+                const on = Math.abs(distNum - val) < 0.05;
+                return (
+                  <button key={r.label} type="button"
+                    className={`chip ${on ? 'on' : ''}`}
+                    onClick={() => setTargetDist(val.toFixed(2))}>
+                    {r.label}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="field" style={{ marginTop: 8 }}>
+              <input id="dist" type="number" inputMode="decimal" value={targetDist}
+                onChange={(e) => setTargetDist(e.target.value)} />
+              <span className="suffix">{unitLabel(unit)}</span>
+            </div>
+            {distNum > 0 && (
+              <p className="hint">≈ {fmtDistUnit(toMetres(distNum, unit), otherUnit)} {otherUnit}</p>
+            )}
+          </div>
         </div>
 
-        <button className="btn gold" onClick={onStart}>Start</button>
-        <p className="muted" style={{ marginTop: 12, fontSize: 13 }}>
+        {/* Plain-language recap of exactly what you're about to do */}
+        <div className="summary">
+          <div className="s-line">
+            {modeLabel} run
+            {distNum > 0
+              ? <> · <span className="s-em">{targetDist} {unitLabel(unit)}</span></>
+              : <> · <span className="s-em">open distance</span></>}
+            {mode !== 'free' && <> @ <span className="s-em">{fmtPace(paceSec)} {paceLabel(unit)}</span></>}
+          </div>
+          <div className="s-sub">Coaching in {DIALECT_LABELS[dialect]}.</div>
+        </div>
+
+        <button className="btn gold" onClick={onStart} style={{ marginTop: 14 }}>Start</button>
+        <p className="hint" style={{ marginTop: 12, textAlign: 'center' }}>
           Grant location &amp; motion access when prompted. Keep the screen on for tracking.
         </p>
       </div>
