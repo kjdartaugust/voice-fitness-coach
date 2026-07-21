@@ -1,21 +1,35 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { api } from '@/lib/api';
-import { fmtPace } from '@/lib/format';
+import { fmtDistUnit, fmtPaceUnit } from '@/lib/format';
+import { useUnit } from '../useUnit';
+import { toUnit, toMetres, M_PER_KM, unitLabel, paceLabel } from '@/lib/units';
 
 export default function PlanPage() {
   const [plans, setPlans] = useState<any[]>([]);
   const [goal, setGoal] = useState('5k');
-  const [weekly, setWeekly] = useState('20');
+  const [weekly, setWeekly] = useState('20'); // in the user's current unit
   const [busy, setBusy] = useState(false);
+  const [unit] = useUnit();
+
+  // Convert the typed weekly volume when the unit flips (plan math stays in km).
+  const prevUnit = useRef(unit);
+  useEffect(() => {
+    const from = prevUnit.current;
+    if (from === unit) return;
+    prevUnit.current = unit;
+    const v = Number(weekly);
+    if (v > 0) setWeekly(toUnit(toMetres(v, from), unit).toFixed(1));
+  }, [unit, weekly]);
 
   const load = () => api.plans().then(setPlans).catch(() => {});
   useEffect(() => { load(); }, []);
 
   const generate = async () => {
     setBusy(true);
-    try { await api.generatePlan(goal, Number(weekly)); await load(); }
+    const weeklyKm = toMetres(Number(weekly), unit) / M_PER_KM;
+    try { await api.generatePlan(goal, weeklyKm); await load(); }
     finally { setBusy(false); }
   };
 
@@ -33,7 +47,7 @@ export default function PlanPage() {
           <option value="half">Half marathon</option>
           <option value="base">Base fitness</option>
         </select>
-        <label className="l muted" style={{ display: 'block', marginTop: 14 }}>Current weekly km</label>
+        <label className="l muted" style={{ display: 'block', marginTop: 14 }}>Current weekly {unitLabel(unit)}</label>
         <input type="number" value={weekly} onChange={(e) => setWeekly(e.target.value)} style={{ marginTop: 8 }} />
         <button className="btn" style={{ marginTop: 14 }} onClick={generate} disabled={busy}>
           {busy ? 'Generating…' : 'Generate plan'}
@@ -50,8 +64,8 @@ export default function PlanPage() {
                 <div className="muted" style={{ fontSize: 12 }}>{s.notes}</div>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <div>{s.distance_km} km</div>
-                {s.target_pace_s_per_km && <div className="muted" style={{ fontSize: 12 }}>@ {fmtPace(s.target_pace_s_per_km)}</div>}
+                <div>{fmtDistUnit(s.distance_km * M_PER_KM, unit)} {unitLabel(unit)}</div>
+                {s.target_pace_s_per_km && <div className="muted" style={{ fontSize: 12 }}>@ {fmtPaceUnit(s.target_pace_s_per_km, unit)}{paceLabel(unit)}</div>}
               </div>
             </div>
           ))}

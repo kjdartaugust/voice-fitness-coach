@@ -3,11 +3,14 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { api } from '@/lib/api';
 import { pendingRuns } from '@/lib/offlineSync';
-import { fmtDist, fmtPace, fmtTime } from '@/lib/format';
+import { fmtDistUnit, fmtPaceUnit, fmtTime } from '@/lib/format';
+import { useUnit } from '../useUnit';
+import { unitLabel, paceLabel } from '@/lib/units';
 
 export default function History() {
   const [runs, setRuns] = useState<any[]>([]);
   const [pending, setPending] = useState<number>(0);
+  const [unit] = useUnit();
 
   useEffect(() => {
     api.runs().then(setRuns).catch(() => {});
@@ -34,10 +37,10 @@ export default function History() {
                 {new Date(r.started_at).toLocaleDateString()} · {r.dialect}
               </div>
             </div>
-            <div className="pill on">{fmtDist(r.distance_m)} km</div>
+            <div className="pill on">{fmtDistUnit(r.distance_m, unit)} {unitLabel(unit)}</div>
           </div>
           <div className="grid3" style={{ marginTop: 10 }}>
-            <div className="metric"><div className="v" style={{ fontSize: 22 }}>{fmtPace(r.avg_pace_s_per_km)}</div><div className="l">Pace</div></div>
+            <div className="metric"><div className="v" style={{ fontSize: 22 }}>{fmtPaceUnit(r.avg_pace_s_per_km, unit)}</div><div className="l">Pace {paceLabel(unit)}</div></div>
             <div className="metric"><div className="v" style={{ fontSize: 22 }}>{fmtTime(r.duration_s)}</div><div className="l">Time</div></div>
             <div className="metric"><div className="v" style={{ fontSize: 22 }}>{Math.round(r.avg_cadence_spm)}</div><div className="l">Cadence</div></div>
           </div>

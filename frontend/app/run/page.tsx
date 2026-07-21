@@ -1,8 +1,13 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useRun } from '../useRun';
-import { fmtTime, fmtPace, fmtDist, DIALECT_LABELS } from '@/lib/format';
+import { useUnit, UnitToggle } from '../useUnit';
+import { fmtTime, fmtDistUnit, fmtPaceUnit, DIALECT_LABELS } from '@/lib/format';
+import {
+  toUnit, toMetres, paceToUnit, paceToSPerKm,
+  unitLabel, unitLabelLong, paceLabel,
+} from '@/lib/units';
 import type { Dialect, RunMode } from '@/lib/types';
 
 const MODES: { id: RunMode; label: string }[] = [
@@ -15,18 +20,39 @@ const MODES: { id: RunMode; label: string }[] = [
 export default function RunPage() {
   const router = useRouter();
   const { running, metrics, start, stop } = useRun();
+  const [unit] = useUnit();
   const [dialect, setDialect] = useState<Dialect>('twi');
   const [mode, setMode] = useState<RunMode>('tempo');
   const [targetPaceMin, setTargetPaceMin] = useState('5');
   const [targetPaceSec, setTargetPaceSec] = useState('30');
-  const [targetKm, setTargetKm] = useState('5');
+  const [targetDist, setTargetDist] = useState('5');
+
+  // When the user flips km <-> mi, convert what they've typed so the *target*
+  // stays physically the same (5 km becomes 3.11 mi, not a new 5 mi goal).
+  const prevUnit = useRef(unit);
+  useEffect(() => {
+    const from = prevUnit.current;
+    if (from === unit) return;
+    prevUnit.current = unit;
+
+    const d = Number(targetDist);
+    if (d > 0) setTargetDist(toUnit(toMetres(d, from), unit).toFixed(2));
+
+    const secFrom = Number(targetPaceMin) * 60 + Number(targetPaceSec);
+    if (secFrom > 0) {
+      const secTo = paceToUnit(paceToSPerKm(secFrom, from), unit);
+      setTargetPaceMin(String(Math.floor(secTo / 60)));
+      setTargetPaceSec(String(Math.round(secTo % 60)).padStart(2, '0'));
+    }
+  }, [unit, targetDist, targetPaceMin, targetPaceSec]);
 
   const onStart = () => {
-    const tp = Number(targetPaceMin) * 60 + Number(targetPaceSec);
+    const tpUnit = Number(targetPaceMin) * 60 + Number(targetPaceSec);
+    const d = Number(targetDist);
     start({
       mode, dialect,
-      targetPace: mode === 'free' ? null : tp,
-      targetDistanceM: Number(targetKm) > 0 ? Number(targetKm) * 1000 : null,
+      targetPace: mode === 'free' ? null : paceToSPerKm(tpUnit, unit),
+      targetDistanceM: d > 0 ? toMetres(d, unit) : null,
     });
   };
 
@@ -46,6 +72,9 @@ export default function RunPage() {
             {Object.entries(DIALECT_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select>
 
+          <label className="l muted" style={{ display: 'block', marginTop: 16 }}>Units</label>
+          <div style={{ marginTop: 8 }}><UnitToggle /></div>
+
           <label className="l muted" style={{ display: 'block', marginTop: 16 }}>Workout</label>
           <div className="row" style={{ marginTop: 8, flexWrap: 'wrap' }}>
             {MODES.map((m) => (
@@ -60,7 +89,7 @@ export default function RunPage() {
 
           {mode !== 'free' && (
             <>
-              <label className="l muted" style={{ display: 'block', marginTop: 16 }}>Target pace (min/km)</label>
+              <label className="l muted" style={{ display: 'block', marginTop: 16 }}>Target pace (min{paceLabel(unit)})</label>
               <div className="row" style={{ marginTop: 8 }}>
                 <input type="number" value={targetPaceMin} onChange={(e) => setTargetPaceMin(e.target.value)} />
                 <input type="number" value={targetPaceSec} onChange={(e) => setTargetPaceSec(e.target.value)} />
@@ -68,8 +97,8 @@ export default function RunPage() {
             </>
           )}
 
-          <label className="l muted" style={{ display: 'block', marginTop: 16 }}>Target distance (km)</label>
-          <input type="number" value={targetKm} onChange={(e) => setTargetKm(e.target.value)} style={{ marginTop: 8 }} />
+          <label className="l muted" style={{ display: 'block', marginTop: 16 }}>Target distance ({unitLabel(unit)})</label>
+          <input type="number" value={targetDist} onChange={(e) => setTargetDist(e.target.value)} style={{ marginTop: 8 }} />
         </div>
 
         <button className="btn gold" onClick={onStart}>Start</button>
@@ -90,14 +119,14 @@ export default function RunPage() {
       </div>
 
       <div className="card big metric" style={{ marginTop: 10 }}>
-        <div className="v">{fmtDist(metrics.distance_m)}</div>
-        <div className="l">Kilometres</div>
+        <div className="v">{fmtDistUnit(metrics.distance_m, unit)}</div>
+        <div className="l">{unitLabelLong(unit)}</div>
       </div>
 
       <div className="row">
         <div className="card metric">
-          <div className="v">{fmtPace(metrics.pace_s_per_km)}</div>
-          <div className="l">Pace /km</div>
+          <div className="v">{fmtPaceUnit(metrics.pace_s_per_km, unit)}</div>
+          <div className="l">Pace {paceLabel(unit)}</div>
         </div>
         <div className="card metric">
           <div className="v">{fmtTime(metrics.elapsed_s)}</div>

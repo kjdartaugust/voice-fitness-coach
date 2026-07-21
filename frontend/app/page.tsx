@@ -2,10 +2,13 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { api } from '@/lib/api';
-import { fmtDist, fmtPace } from '@/lib/format';
+import { fmtDistUnit, fmtPaceUnit } from '@/lib/format';
+import { useUnit } from './useUnit';
+import { M_PER_KM, unitLabel } from '@/lib/units';
 
 export default function Home() {
   const [stats, setStats] = useState<any>(null);
+  const [unit] = useUnit();
   useEffect(() => { api.stats().then(setStats).catch(() => {}); }, []);
 
   return (
@@ -22,11 +25,11 @@ export default function Home() {
             <div className="l">Runs</div>
           </div>
           <div className="metric">
-            <div className="v">{stats ? stats.total_km : '—'}</div>
-            <div className="l">Total km</div>
+            <div className="v">{stats ? fmtDistUnit(stats.total_km * M_PER_KM, unit) : '—'}</div>
+            <div className="l">Total {unitLabel(unit)}</div>
           </div>
           <div className="metric">
-            <div className="v">{stats ? fmtPace(stats.best_pace_s_per_km) : '—'}</div>
+            <div className="v">{stats ? fmtPaceUnit(stats.best_pace_s_per_km, unit) : '—'}</div>
             <div className="l">Best pace</div>
           </div>
         </div>

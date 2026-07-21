@@ -1,3 +1,5 @@
+import { type Unit, toUnit, paceToUnit } from './units';
+
 export function fmtTime(s: number): string {
   const t = Math.max(0, Math.floor(s));
   const h = Math.floor(t / 3600);
@@ -17,6 +19,19 @@ export function fmtPace(sPerKm: number): string {
 
 export function fmtDist(m: number): string {
   return m >= 1000 ? `${(m / 1000).toFixed(2)}` : `${Math.round(m)}`;
+}
+
+// --- unit-aware helpers (km/mi) -------------------------------------------
+// Canonical inputs stay metres / seconds-per-km; these render in the user's unit.
+
+/** metres -> "3.11" in the given unit (always 2dp so it reads like a distance). */
+export function fmtDistUnit(m: number, u: Unit): string {
+  return toUnit(m, u).toFixed(2);
+}
+
+/** seconds/km -> "8:03" clock in the given unit (min:sec per km or per mi). */
+export function fmtPaceUnit(sPerKm: number, u: Unit): string {
+  return fmtPace(paceToUnit(sPerKm, u));
 }
 
 export const DIALECT_LABELS: Record<string, string> = {
