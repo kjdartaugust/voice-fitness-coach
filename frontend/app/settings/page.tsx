@@ -6,6 +6,8 @@ import { DIALECT_LABELS } from '@/lib/format';
 import { useUnit, UnitToggle } from '../useUnit';
 import { toUnit, toMetres, M_PER_KM, unitLabel } from '@/lib/units';
 
+const WEEK_MIN = 0, WEEK_MAX = 200;
+
 export default function Settings() {
   const [p, setP] = useState<any>({ display_name: '', dialect: 'twi', weekly_target_km: 20 });
   const [unit] = useUnit();
@@ -32,6 +34,9 @@ export default function Settings() {
     if (v > 0) setWeekly(toUnit(toMetres(v, from), unit).toFixed(1));
   }, [unit, weekly]);
 
+  const stepWeekly = (delta: number) =>
+    setWeekly((w) => String(Math.min(WEEK_MAX, Math.max(WEEK_MIN, Math.round((Number(w) + delta) * 10) / 10))));
+
   const save = async () => {
     const km = toMetres(Number(weekly), unit) / M_PER_KM;
     await api.updateProfile({
@@ -45,23 +50,43 @@ export default function Settings() {
   return (
     <div className="wrap">
       <div className="brand"><span className="dot" /> Settings</div>
+
       <div className="card">
-        <label className="l muted">Name</label>
-        <input value={p.display_name} onChange={(e) => setP({ ...p, display_name: e.target.value })} style={{ marginTop: 8 }} />
+        <label className="field-label" htmlFor="name">Name</label>
+        <p className="hint">Shown in your greeting on the home screen.</p>
+        <input id="name" value={p.display_name} placeholder="Your name"
+          onChange={(e) => setP({ ...p, display_name: e.target.value })} style={{ marginTop: 8 }} />
 
-        <label className="l muted" style={{ display: 'block', marginTop: 14 }}>Default coaching language</label>
-        <select value={p.dialect} onChange={(e) => setP({ ...p, dialect: e.target.value })} style={{ marginTop: 8 }}>
-          {Object.entries(DIALECT_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-        </select>
+        <div className="stack">
+          <label className="field-label" htmlFor="lang">Default coaching language</label>
+          <p className="hint">The dialect a new session starts in.</p>
+          <select id="lang" value={p.dialect} onChange={(e) => setP({ ...p, dialect: e.target.value })} style={{ marginTop: 8 }}>
+            {Object.entries(DIALECT_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+          </select>
+        </div>
 
-        <label className="l muted" style={{ display: 'block', marginTop: 14 }}>Distance units</label>
-        <div style={{ marginTop: 8 }}><UnitToggle /></div>
+        <div className="stack">
+          <span className="field-label">Distance units</span>
+          <p className="hint">Applies everywhere — distances and paces convert instantly.</p>
+          <div style={{ marginTop: 8 }}><UnitToggle /></div>
+        </div>
 
-        <label className="l muted" style={{ display: 'block', marginTop: 14 }}>Weekly target ({unitLabel(unit)})</label>
-        <input type="number" value={weekly} onChange={(e) => setWeekly(e.target.value)} style={{ marginTop: 8 }} />
+        <div className="stack">
+          <span className="field-label">Weekly target</span>
+          <p className="hint">Drives the goal meter on your home screen.</p>
+          <div className="stepper" style={{ marginTop: 8 }}>
+            <button type="button" className="step-btn" aria-label="Less" onClick={() => stepWeekly(-1)}>−</button>
+            <div className="step-val">
+              <div className="n">{Number(weekly).toFixed(Number.isInteger(Number(weekly)) ? 0 : 1)}</div>
+              <div className="u">{unitLabel(unit)} / week</div>
+            </div>
+            <button type="button" className="step-btn" aria-label="More" onClick={() => stepWeekly(1)}>+</button>
+          </div>
+        </div>
 
-        <button className="btn" style={{ marginTop: 16 }} onClick={save}>{saved ? 'Saved ✓' : 'Save'}</button>
+        <button className="btn" style={{ marginTop: 18 }} onClick={save}>{saved ? 'Saved ✓' : 'Save'}</button>
       </div>
+
       <Link href="/"><button className="btn ghost">Home</button></Link>
     </div>
   );
