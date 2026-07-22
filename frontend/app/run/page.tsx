@@ -169,25 +169,57 @@ export default function RunPage() {
   const cue = metrics.lastCue;
   const warn = cue && ['speed_up', 'slow_down', 'cadence_low', 'overstriding'].includes(cue.id);
 
+  // Live pace vs. goal → colour feedback (canonical compare in s/km).
+  const targetPaceSPerKm = mode !== 'free' ? paceToSPerKm(paceSec, unit) : null;
+  const live = metrics.pace_s_per_km;
+  let paceState: keyof typeof PACE_STATE = 'idle';
+  if (targetPaceSPerKm && live > 0) {
+    const diff = live - targetPaceSPerKm; // +ve = slower than goal
+    paceState = diff > 10 ? 'slow' : diff < -10 ? 'fast' : 'on';
+  }
+  const st = PACE_STATE[paceState];
+
+  // Distance progress toward the goal.
+  const targetM = distNum > 0 ? toMetres(distNum, unit) : null;
+  const pct = targetM ? Math.min(1, metrics.distance_m / targetM) : null;
+
+  const R = 96, C = 2 * Math.PI * R;
+  const ringColor = targetPaceSPerKm ? st.color : 'var(--gold)';
+
   return (
     <div className="wrap">
       <div className="status">
         <span className="live" /> {metrics.online ? 'Tracking' : 'Offline — will sync later'} · {DIALECT_LABELS[dialect]}
       </div>
 
-      <div className="card big metric" style={{ marginTop: 10 }}>
-        <div className="v">{fmtDistUnit(metrics.distance_m, unit)}</div>
-        <div className="l">{unitLabelLong(unit)}</div>
+      <div className="run-ring">
+        <svg viewBox="0 0 220 220" aria-hidden="true">
+          <circle cx="110" cy="110" r={R} fill="none" stroke="#1c3327" strokeWidth="14" />
+          <circle className="arc" cx="110" cy="110" r={R} fill="none"
+            stroke={ringColor} strokeWidth="14" strokeLinecap="round"
+            strokeDasharray={C} strokeDashoffset={C * (1 - (pct ?? 0))} />
+        </svg>
+        <div className="center">
+          <div className="d">{fmtDistUnit(metrics.distance_m, unit)}</div>
+          <div className="du">{unitLabelLong(unit)}</div>
+          {targetM
+            ? <div className="dpct" style={{ color: ringColor }}>{Math.round((pct ?? 0) * 100)}% of {targetDist} {unitLabel(unit)}</div>
+            : <div className="dof">open run</div>}
+        </div>
       </div>
 
       <div className="row">
         <div className="card metric">
-          <div className="v">{fmtPaceUnit(metrics.pace_s_per_km, unit)}</div>
+          <div className="v" style={{ color: targetPaceSPerKm ? st.color : undefined }}>{fmtPaceUnit(live, unit)}</div>
           <div className="l">Pace {paceLabel(unit)}</div>
+          {targetPaceSPerKm
+            ? <div className="pace-sub" style={{ color: st.color }}>{st.label}</div>
+            : <div className="tile-target">free pace</div>}
         </div>
         <div className="card metric">
           <div className="v">{fmtTime(metrics.elapsed_s)}</div>
           <div className="l">Time</div>
+          {targetPaceSPerKm && <div className="tile-target">goal {fmtPace(paceSec)} {paceLabel(unit)}</div>}
         </div>
       </div>
 
@@ -204,6 +236,14 @@ export default function RunPage() {
     </div>
   );
 }
+
+// Live pace-vs-goal states: colour + short caption for the ring and pace tile.
+const PACE_STATE = {
+  on:   { color: '#22c55e', label: 'On pace ✓' },
+  slow: { color: '#f5b301', label: 'Speed up ⤴' },
+  fast: { color: '#38bdf8', label: 'Ahead — ease ⤵' },
+  idle: { color: '#8fb3a0', label: 'Find your pace' },
+} as const;
 
 // Minimal on-screen captions (the audio is the real coaching channel).
 const CAPTIONS: Record<string, Record<string, string>> = {
