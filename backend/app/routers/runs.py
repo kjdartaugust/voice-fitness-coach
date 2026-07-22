@@ -45,6 +45,7 @@ async def sync_run(
         profile_id=user.id,
         plan_id=body.plan_id,
         mode=body.mode,
+        activity=body.activity,
         dialect=body.dialect,
         started_at=body.started_at,
         ended_at=body.ended_at,

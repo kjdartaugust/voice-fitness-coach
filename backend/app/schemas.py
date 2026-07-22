@@ -55,6 +55,7 @@ class RoutePoint(BaseModel):
 class RunIn(BaseModel):
     client_id: str                 # idempotency key from the device
     mode: str = Field("free", pattern="^(free|interval|tempo|long)$")
+    activity: str = Field("run", pattern="^(run|walk|hike|ride)$")
     dialect: str = Field("twi", pattern="^(twi|ga|ewe)$")
     plan_id: str | None = None
     target_pace_s_per_km: float | None = None
@@ -67,6 +68,7 @@ class RunIn(BaseModel):
 class RunOut(BaseModel):
     id: str
     mode: str
+    activity: str
     dialect: str
     distance_m: float
     duration_s: float

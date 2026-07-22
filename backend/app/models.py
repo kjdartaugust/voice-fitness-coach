@@ -63,6 +63,7 @@ class Run(Base):
     profile_id: Mapped[str] = mapped_column(ForeignKey("profiles.id"))
     plan_id: Mapped[str | None] = mapped_column(ForeignKey("plans.id"), nullable=True)
     mode: Mapped[str] = mapped_column(String, default="free")  # free|interval|tempo|long
+    activity: Mapped[str] = mapped_column(String, default="run")  # run|walk|hike|ride
     dialect: Mapped[str] = mapped_column(String, default="twi")
 
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
