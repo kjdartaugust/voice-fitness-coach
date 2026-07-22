@@ -83,12 +83,15 @@ export function evaluate(s: RunnerState, mem: CoachMemory): Cue | null {
     }
   }
 
-  if (s.cadence_spm > 0 && s.cadence_spm < OVERSTRIDE_CADENCE_SPM && s.pace_s_per_km < 360) {
-    if (canFire(mem, CueId.OVERSTRIDING, now)) {
-      candidates.push({ id: CueId.OVERSTRIDING, reason: 'overstriding', params: {} });
+  // Cadence / foot-strike form is running-specific — skip for walk/hike/ride.
+  if ((s.activity ?? 'run') === 'run') {
+    if (s.cadence_spm > 0 && s.cadence_spm < OVERSTRIDE_CADENCE_SPM && s.pace_s_per_km < 360) {
+      if (canFire(mem, CueId.OVERSTRIDING, now)) {
+        candidates.push({ id: CueId.OVERSTRIDING, reason: 'overstriding', params: {} });
+      }
+    } else if (s.cadence_spm > 0 && s.cadence_spm < MIN_CADENCE_SPM && canFire(mem, CueId.CADENCE_LOW, now)) {
+      candidates.push({ id: CueId.CADENCE_LOW, reason: 'cadence low', params: {} });
     }
-  } else if (s.cadence_spm > 0 && s.cadence_spm < MIN_CADENCE_SPM && canFire(mem, CueId.CADENCE_LOW, now)) {
-    candidates.push({ id: CueId.CADENCE_LOW, reason: 'cadence low', params: {} });
   }
 
   const completedKm = Math.floor(s.distance_m / 1000);

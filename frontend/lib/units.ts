@@ -40,6 +40,20 @@ export function paceToSPerKm(secPerUnit: number, u: Unit): number {
   return u === 'mi' ? secPerUnit / MI_PER_KM : secPerUnit;
 }
 
+// --- speed (for cycling) --------------------------------------------------
+// Speed is just inverse pace: unit/hour = 3600 / (seconds per unit).
+/** seconds/km -> speed in the given unit per hour (km/h or mph) */
+export function speedFromPace(sPerKm: number, u: Unit): number {
+  const secPerUnit = paceToUnit(sPerKm, u);
+  return secPerUnit > 0 ? 3600 / secPerUnit : 0;
+}
+/** speed in unit/hour -> seconds/km */
+export function paceFromSpeed(speedPerHour: number, u: Unit): number {
+  if (speedPerHour <= 0) return 0;
+  return paceToSPerKm(3600 / speedPerHour, u);
+}
+export const speedLabel = (u: Unit): string => (u === 'mi' ? 'mph' : 'km/h');
+
 // --- labels ---------------------------------------------------------------
 export const unitLabel = (u: Unit): string => u; // 'km' | 'mi'
 export const unitLabelLong = (u: Unit): string =>

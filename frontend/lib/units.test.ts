@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import {
-  toUnit, toMetres, paceToUnit, paceToSPerKm, M_PER_MI,
+  toUnit, toMetres, paceToUnit, paceToSPerKm, speedFromPace, paceFromSpeed, M_PER_MI,
 } from './units';
-import { fmtDistUnit, fmtPaceUnit } from './format';
+import { fmtDistUnit, fmtPaceUnit, fmtSpeedUnit } from './format';
 
 describe('distance conversion', () => {
   it('km is the identity', () => {
@@ -35,5 +35,21 @@ describe('pace conversion', () => {
     for (const u of ['km', 'mi'] as const) {
       expect(paceToSPerKm(paceToUnit(330, u), u)).toBeCloseTo(330, 9);
     }
+  });
+});
+
+describe('speed conversion (cycling)', () => {
+  it('4:00/km is 15 km/h', () => {
+    expect(speedFromPace(240, 'km')).toBeCloseTo(15, 6);
+    expect(fmtSpeedUnit(240, 'km')).toBe('15.0');
+  });
+  it('24 km/h round-trips to ~2:30/km', () => {
+    const sPerKm = paceFromSpeed(24, 'km');
+    expect(sPerKm).toBeCloseTo(150, 6);
+    expect(speedFromPace(sPerKm, 'km')).toBeCloseTo(24, 6);
+  });
+  it('reports mph when the unit is miles', () => {
+    // 15 km/h ≈ 9.32 mph
+    expect(speedFromPace(240, 'mi')).toBeCloseTo(9.32, 2);
   });
 });

@@ -34,6 +34,21 @@ describe('coaching engine (mirror of python)', () => {
     expect(c1?.id).toBe(CueId.KM_SPLIT);
     expect(c2?.id).not.toBe(CueId.KM_SPLIT);
   });
+  it('nudges low cadence when running', () => {
+    const c = evaluate(base({ cadence_spm: 150, pace_s_per_km: 400, activity: 'run' }), newMemory());
+    expect(c?.id).toBe(CueId.CADENCE_LOW);
+  });
+  it('never coaches cadence for walk/hike/ride', () => {
+    for (const activity of ['walk', 'hike', 'ride'] as const) {
+      const c = evaluate(base({ cadence_spm: 150, pace_s_per_km: 400, activity }), newMemory());
+      expect(c?.id).not.toBe(CueId.CADENCE_LOW);
+      expect(c?.id).not.toBe(CueId.OVERSTRIDING);
+    }
+  });
+  it('still corrects pace regardless of activity (cycling speed = inverse pace)', () => {
+    const c = evaluate(base({ pace_s_per_km: 200, target_pace_s_per_km: 150, activity: 'ride', cadence_spm: 0 }), newMemory());
+    expect(c?.id).toBe(CueId.SPEED_UP); // slower than goal speed → push
+  });
 });
 
 describe('tracking math', () => {

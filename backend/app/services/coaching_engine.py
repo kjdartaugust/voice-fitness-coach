@@ -79,6 +79,7 @@ class RunnerState:
     pace_s_per_km: float          # instantaneous / smoothed pace
     cadence_spm: float            # steps per minute
     mode: str = "free"            # free | interval | tempo | long
+    activity: str = "run"         # run | walk | hike | ride
     target_pace_s_per_km: float | None = None
     target_distance_m: float | None = None
     # interval mode: current phase + seconds remaining in phase
@@ -150,17 +151,18 @@ def evaluate(state: RunnerState, mem: CoachMemory) -> Cue | None:
         elif abs(ratio - 1) <= PACE_TOLERANCE and mem.can_fire(CueId.ON_PACE, now):
             candidates.append(Cue(CueId.ON_PACE, "holding target pace"))
 
-    # ── Form: cadence / overstriding ────────────────────────────────────────
-    if 0 < state.cadence_spm < OVERSTRIDE_CADENCE_SPM and state.pace_s_per_km < 360:
-        # moving reasonably fast but with a very low cadence => long strides
-        if mem.can_fire(CueId.OVERSTRIDING, now):
+    # ── Form: cadence / overstriding (running only) ─────────────────────────
+    if state.activity == "run":
+        if 0 < state.cadence_spm < OVERSTRIDE_CADENCE_SPM and state.pace_s_per_km < 360:
+            # moving reasonably fast but with a very low cadence => long strides
+            if mem.can_fire(CueId.OVERSTRIDING, now):
+                candidates.append(
+                    Cue(CueId.OVERSTRIDING, f"cadence {state.cadence_spm:.0f} spm w/ speed")
+                )
+        elif 0 < state.cadence_spm < MIN_CADENCE_SPM and mem.can_fire(CueId.CADENCE_LOW, now):
             candidates.append(
-                Cue(CueId.OVERSTRIDING, f"cadence {state.cadence_spm:.0f} spm w/ speed")
+                Cue(CueId.CADENCE_LOW, f"cadence {state.cadence_spm:.0f} spm below target")
             )
-    elif 0 < state.cadence_spm < MIN_CADENCE_SPM and mem.can_fire(CueId.CADENCE_LOW, now):
-        candidates.append(
-            Cue(CueId.CADENCE_LOW, f"cadence {state.cadence_spm:.0f} spm below target")
-        )
 
     # ── Km split announcements ──────────────────────────────────────────────
     completed_km = int(state.distance_m // 1000)

@@ -15,10 +15,11 @@ import { evaluate, newMemory, type CoachMemory } from '@/lib/coaching';
 import { AudioCuePlayer } from '@/lib/audioCue';
 import { api } from '@/lib/api';
 import { queueRun, flush } from '@/lib/offlineSync';
-import type { Cue, Dialect, RunMode, RunRecord } from '@/lib/types';
+import type { Activity, Cue, Dialect, RunMode, RunRecord } from '@/lib/types';
 
 export interface RunConfig {
   mode: RunMode;
+  activity: Activity;
   dialect: Dialect;
   targetPace?: number | null;
   targetDistanceM?: number | null;
@@ -98,6 +99,7 @@ export function useRun() {
     const snap = tracker.current.snapshot(cfg.current.mode);
     const state = {
       ...snap,
+      activity: cfg.current.activity,
       target_pace_s_per_km: cfg.current.targetPace ?? null,
       target_distance_m: cfg.current.targetDistanceM ?? null,
     };
@@ -128,6 +130,7 @@ export function useRun() {
     const record: RunRecord = {
       client_id: crypto.randomUUID(),
       mode: cfg.current.mode,
+      activity: cfg.current.activity,
       dialect: cfg.current.dialect,
       target_pace_s_per_km: cfg.current.targetPace ?? null,
       started_at: new Date(startedMs).toISOString(),

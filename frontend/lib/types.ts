@@ -1,5 +1,6 @@
 export type Dialect = 'twi' | 'ga' | 'ewe';
 export type RunMode = 'free' | 'interval' | 'tempo' | 'long';
+export type Activity = 'run' | 'walk' | 'hike' | 'ride';
 
 export interface RoutePoint {
   t: number; // seconds since run start
@@ -16,6 +17,7 @@ export interface RunnerState {
   pace_s_per_km: number;
   cadence_spm: number;
   mode: RunMode;
+  activity?: Activity; // defaults to 'run' when absent (keeps old callers valid)
   target_pace_s_per_km?: number | null;
   target_distance_m?: number | null;
   interval_phase?: 'work' | 'rest' | null;
@@ -31,6 +33,7 @@ export interface Cue {
 export interface RunRecord {
   client_id: string;
   mode: RunMode;
+  activity: Activity;
   dialect: Dialect;
   plan_id?: string | null;
   target_pace_s_per_km?: number | null;

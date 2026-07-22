@@ -1,4 +1,4 @@
-import { type Unit, toUnit, paceToUnit } from './units';
+import { type Unit, toUnit, paceToUnit, speedFromPace } from './units';
 
 export function fmtTime(s: number): string {
   const t = Math.max(0, Math.floor(s));
@@ -32,6 +32,12 @@ export function fmtDistUnit(m: number, u: Unit): string {
 /** seconds/km -> "8:03" clock in the given unit (min:sec per km or per mi). */
 export function fmtPaceUnit(sPerKm: number, u: Unit): string {
   return fmtPace(paceToUnit(sPerKm, u));
+}
+
+/** seconds/km -> "24.0" speed in the given unit (km/h or mph), for cycling. */
+export function fmtSpeedUnit(sPerKm: number, u: Unit): string {
+  const s = speedFromPace(sPerKm, u);
+  return isFinite(s) && s > 0 ? s.toFixed(1) : '0.0';
 }
 
 export const DIALECT_LABELS: Record<string, string> = {
