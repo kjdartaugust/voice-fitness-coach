@@ -105,6 +105,19 @@ select, input { width: 100%; padding: 12px; border-radius: 10px; background: #0e
 .nav-row .nd { color: var(--muted); font-size: 12.5px; font-weight: 400; }
 .nav-row .chev { color: var(--muted); font-size: 20px; }
 
+/* --- training plan ----------------------------------------------------- */
+.plan-name { font-weight: 800; font-size: 17px; }
+.week-label { color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; margin: 16px 0 4px; }
+.week-label:first-child { margin-top: 4px; }
+.sess { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid #1c3327; }
+.sess-badge { width: 38px; height: 38px; flex: none; border-radius: 11px; background: #0e1a14; border: 1px solid #2a4536; display: flex; align-items: center; justify-content: center; font-size: 17px; }
+.sess-body { flex: 1; min-width: 0; }
+.sess-type { font-weight: 700; text-transform: capitalize; }
+.sess-notes { color: var(--muted); font-size: 12px; margin-top: 2px; }
+.sess-right { text-align: right; flex: none; }
+.sess-dist { font-weight: 700; font-variant-numeric: tabular-nums; }
+.sess-pace { color: var(--muted); font-size: 12px; margin-top: 2px; }
+
 /* --- history ----------------------------------------------------------- */
 .hist-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .hist-title { display: flex; align-items: center; gap: 12px; min-width: 0; }
