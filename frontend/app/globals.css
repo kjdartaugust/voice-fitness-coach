@@ -81,6 +81,30 @@ select, input { width: 100%; padding: 12px; border-radius: 10px; background: #0e
 .summary .s-sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
 .summary .s-em { color: var(--gold); }
 
+/* --- home dashboard ---------------------------------------------------- */
+.greet { margin-top: 14px; }
+.greet .g1 { font-size: 22px; font-weight: 800; }
+.greet .g2 { color: var(--muted); font-size: 14px; margin-top: 2px; }
+.hero-card { background: linear-gradient(160deg,#163a28,#0e1a14); border: 1px solid #2a4536; border-radius: 18px; padding: 18px; margin: 14px 0; }
+.hero-top { display: flex; justify-content: space-between; align-items: baseline; }
+.hero-top .ht-l { color: #cfeede; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+.hero-top .ht-r { color: var(--muted); font-size: 13px; }
+.hero-val { font-size: 34px; font-weight: 800; font-variant-numeric: tabular-nums; margin: 10px 0 12px; }
+.hero-val .unit { font-size: 16px; color: var(--muted); font-weight: 700; margin-left: 4px; }
+.meter { height: 12px; border-radius: 999px; background: #0b140f; border: 1px solid #2a4536; overflow: hidden; }
+.meter > span { display: block; height: 100%; background: linear-gradient(90deg,var(--green),var(--gold)); border-radius: 999px; transition: width .7s ease; }
+.hero-foot { color: var(--muted); font-size: 12.5px; margin-top: 10px; }
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stat { background: var(--panel); border: 1px solid #1c3327; border-radius: 14px; padding: 14px; }
+.stat .sv { font-size: 26px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; }
+.stat .sl { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-top: 7px; }
+.nav-row { display: flex; align-items: center; gap: 12px; padding: 15px 16px; background: var(--panel); border: 1px solid #1c3327; border-radius: 14px; margin-top: 10px; cursor: pointer; }
+.nav-row:active { transform: scale(0.995); }
+.nav-row .ic { width: 30px; text-align: center; font-size: 18px; }
+.nav-row .nt { font-weight: 700; flex: 1; }
+.nav-row .nd { color: var(--muted); font-size: 12.5px; font-weight: 400; }
+.nav-row .chev { color: var(--muted); font-size: 20px; }
+
 /* --- live run screen --------------------------------------------------- */
 .run-ring { position: relative; width: min(74vw, 300px); aspect-ratio: 1; margin: 10px auto 4px; }
 .run-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
